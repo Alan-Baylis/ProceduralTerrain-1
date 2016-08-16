@@ -5,7 +5,7 @@ namespace ProjectUtility
 {
     public class PerlinNoise : Noise
     {
-
+        public float[] weights = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
         private int poolSize = 500;
         private Vector2[] pool;
 
@@ -20,6 +20,22 @@ namespace ProjectUtility
         }
 
         public override float Get(float x, float y)
+        {
+            float total = 0;
+            float baseOctave = 0.25f;
+            float scale = baseOctave;
+            foreach (float w in weights)
+            {
+                total += w * Raw(scale * x, scale * y);
+                scale *= 2.0f;
+                //4 * Raw(0.25f * x, 0.25f * y)
+                //+2 * Raw(0.5f * x, 0.5f * y)
+                //+ Raw(x, y)
+            }
+            return total;
+        }
+
+        private float Raw(float x, float y)
         {
             Vector2 point = new Vector2(x, y);
             int x0 = Mathf.FloorToInt(x);

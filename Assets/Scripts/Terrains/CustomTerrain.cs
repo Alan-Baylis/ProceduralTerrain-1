@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using ProjectUtility;
+using UnityEditor;
+using System.IO;
 
 [RequireComponent(typeof(MeshFilter))]
 [RequireComponent(typeof(Noise))]
@@ -8,6 +10,7 @@ public class CustomTerrain : MonoBehaviour
 {
     public int gridSize = 4;
     public float cellSize = 1.0f;
+    public string meshPath = "Assets/Generated/terrain.asset";
 
     MeshRenderer meshRenderer;
     MeshFilter meshFilter;
@@ -19,24 +22,47 @@ public class CustomTerrain : MonoBehaviour
     void Start()
     {
         noise = GetComponent<Noise>();
-        Regenerate();
+        this.LoadMesh();
+        if (!GetComponent<MeshFilter>().sharedMesh)
+        {
+            this.Regenerate();
+        }
     }
 
     public void Regenerate()
     {
         noise.Init();
-        Mesh mesh = GetComponent<MeshFilter>().mesh;
+        Mesh mesh = GetComponent<MeshFilter>().sharedMesh;
+        if (!mesh)
+        {
+            mesh = new Mesh();
+            GetComponent<MeshFilter>().sharedMesh = mesh;
+        }
         mesh.vertices = GenVertices();
         mesh.triangles = GenTriangles();
         mesh.uv = GenUVs();
         mesh.RecalculateNormals();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SaveMesh()
     {
-
+        Mesh mesh = Instantiate<Mesh>(GetComponent<MeshFilter>().sharedMesh);
+        if (!AssetDatabase.IsValidFolder(Path.GetDirectoryName(meshPath)))
+            AssetDatabase.CreateFolder("Assets","Generated");
+        AssetDatabase.CreateAsset(mesh, meshPath);
     }
+
+    public void LoadMesh()
+    {
+        Mesh mesh = AssetDatabase.LoadMainAssetAtPath(meshPath) as Mesh;
+
+        if (mesh != null)
+        {
+            GetComponent<MeshFilter>().sharedMesh = Instantiate(mesh) as Mesh;
+        }
+        Debug.Log("Asset is null ? " + mesh == null);
+    }
+   
 
     Vector2[] GenUVs()
     {
@@ -97,7 +123,7 @@ public class CustomTerrain : MonoBehaviour
             {
                 float x = gx * cellSize;
                 float z = gz * cellSize;
-                float height = 3.0f * noise.Get(x,z);
+                float height = noise.Get(x,z);
                 vertices[gx * l + gz] = new Vector3(x, height, z);
             }
         }

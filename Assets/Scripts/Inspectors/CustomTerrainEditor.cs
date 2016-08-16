@@ -18,7 +18,20 @@ public class CustomTerrainEditor : Editor
                 tg.Regenerate();
             }
         }
-
+        if (GUILayout.Button("Save"))
+        {
+            if (tg != null)
+            {
+                tg.SaveMesh();
+            }
+        }
+        if (GUILayout.Button("Load"))
+        {
+            if (tg != null)
+            {
+                tg.LoadMesh();
+            }
+        }
     }
 
 }
